@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import userRouter from './routes/user.route.js';
 
 dotenv.config();
 
@@ -20,3 +21,7 @@ const port = process.env.PORT || 1024;
 app.listen(port, () => {
   console.log(`http://127.0.0.1:${port}`);
 });
+
+// middleware
+
+app.use('/api/user', userRouter);
