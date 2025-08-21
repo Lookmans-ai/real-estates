@@ -9,7 +9,7 @@ export const signup = async (req, res, next) => {
 
   //   console.log({ username, email, password });
 
-  if (!username.trim() || !email.trim() || !password.trim()) {
+  if (!username || !email || !password) {
     // return res.status(400).json({ message: 'Please fill all input!' });
     return next(errorHandler(400, 'Please fill in all input!'));
   }

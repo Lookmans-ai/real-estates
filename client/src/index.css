@@ -5,3 +5,15 @@
 body {
   background-color: whitesmoke;
 }
+
+.loading {
+  display: block !important;
+}
+
+.alert {
+  border: 0.1rem #f3cecf solid;
+  background-color: #f3cecf;
+  padding: 0.5rem;
+  color: #de787c;
+  border-radius: 0.5rem;
+}
