@@ -30,7 +30,7 @@ export default function Header() {
           </Link>
 
           <Link to={'/about'}>
-            <li className='hiden sm:inline text-slate-100 hover:underline cursor-pointer'>
+            <li className='hidden sm:inline text-slate-100 hover:underline cursor-pointer'>
               About
             </li>
           </Link>
