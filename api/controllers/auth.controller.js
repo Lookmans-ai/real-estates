@@ -64,7 +64,7 @@ export const signin = async (req, res, next) => {
     res
       .cookie('access_token', token, { httpOnly: true })
       .status(200)
-      .json(rest);
+      .json({ ...rest, message: 'Sign in successful!' });
   } catch (error) {
     if (error.code === 11000) {
       next(errorHandler(400, 'Wrong credentials!'));

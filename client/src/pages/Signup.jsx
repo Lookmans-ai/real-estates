@@ -4,12 +4,23 @@ import { Link } from 'react-router-dom';
 import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from '../redux/user/userSlice';
 
 export default function Signup() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+
+  const { loading, error } = useSelector((state) => state.user);
+  // const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(null);
+
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData({
@@ -20,8 +31,11 @@ export default function Signup() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+
+    dispatch(signInStart());
+    // setLoading(true);
+    // setError(null);
+    setSuccessMsg(null);
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -34,19 +48,28 @@ export default function Signup() {
       const data = await res.json();
       console.log(data);
       if (data?.success === false) {
-        setLoading(false);
-        setError(data.message);
+        dispatch(signInFailure(data.message));
+        // setLoading(false);
+        // setError(data.message);
         return;
       }
 
-      setLoading(false);
-      setError(null);
+      dispatch(signInSuccess(data));
 
-      navigate('/sign-in');
+      // setLoading(false);
+      // setError(null);
+      setSuccessMsg(data.message); //show server message
+
+      setTimeout(() => {
+        navigate('/sign-in');
+      }, 2000);
+
+      // navigate('/sign-in');
     } catch (error) {
       console.log(error);
-      setLoading(false);
-      setError(error.message);
+      dispatch(signInFailure(error.message));
+      // setLoading(false);
+      // setError(error.message);
     }
   };
   // console.log(formData);
@@ -58,6 +81,8 @@ export default function Signup() {
           <LoadingBox />
         ) : error ? (
           <MessageBox variant='danger'>{error}</MessageBox>
+        ) : successMsg ? (
+          <MessageBox>{successMsg}</MessageBox>
         ) : null}
       </div>
       <form className='flex flex-col gap-4' onSubmit={submitHandler}>
@@ -67,6 +92,7 @@ export default function Signup() {
           id='username'
           placeholder='username'
           onChange={handleChange}
+          autoComplete='on'
         />
         <input
           type='email'
@@ -74,6 +100,7 @@ export default function Signup() {
           id='email'
           placeholder='email'
           onChange={handleChange}
+          autoComplete='on'
         />
         <input
           type='password'
@@ -81,18 +108,19 @@ export default function Signup() {
           id='password'
           placeholder='password'
           onChange={handleChange}
+          autoComplete='on'
         />
         <button
           disabled={loading}
           className='bg-amber-500 hover:opacity-95 disabled:opacity-80 text-white p-3 rounded-lg uppercase'
         >
-          {loading ? 'Loading...' : 'Sign Up'}
+          {loading ? <LoadingBox /> : 'Sign Up'}
         </button>
       </form>
       <div className='flex gap-2 mt-3'>
         <p>Have an account?</p>
         <Link to={'/sign-in'}>
-          <span className='text-amber-500'>Sign In</span>
+          <span className='text-amber-500 hover:underline'>Sign In</span>
         </Link>
       </div>
     </div>

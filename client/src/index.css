@@ -14,6 +14,14 @@ body {
   border: 0.1rem #f3cecf solid;
   background-color: #f3cecf;
   padding: 0.5rem;
-  color: #de787c;
+  color: #421012;
+  border-radius: 0.5rem;
+}
+
+.alert-info {
+  border: 0.1rem #d5dfec solid;
+  background-color: #d5dfec;
+  padding: 0.5rem;
+  color: #3c5e88;
   border-radius: 0.5rem;
 }
