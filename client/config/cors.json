@@ -1,0 +1,10 @@
+[
+  {
+    "method": ["POST", "GET", "PUT", "DELETE"],
+    "origin": [
+      "https://estates-project-82753.web.app",
+      "http://localhost:5173"
+    ],
+    "responseHeader": ["Content-Type"]
+  }
+]

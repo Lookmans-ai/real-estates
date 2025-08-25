@@ -42,7 +42,14 @@ export default function Header() {
             {currentUser ? (
               <img
                 className='rounded-full h-7 w-7 object-cover'
-                src={currentUser.avatar}
+                src={
+                  currentUser.avatar
+                    ? currentUser.avatar.startsWith('http')
+                      ? currentUser.avatar
+                      : `http://localhost:1024/${currentUser.avatar}`
+                    : '/default-avatar.png'
+                }
+                // src={`http://localhost:1024/${currentUser.avatar}`}
                 alt='profile'
               />
             ) : (
