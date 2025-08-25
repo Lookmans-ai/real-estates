@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 
@@ -24,6 +25,7 @@ const app = express();
 // middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 const __filename = fileURLToPath(import.meta.url);
