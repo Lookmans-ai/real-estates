@@ -11,12 +11,7 @@ export const updateUser = async (req, res, next) => {
   // console.log('HEARDERS:', req.headers);
 
   if (req.user.id !== req.params.id)
-    return next(
-      errorHandler(
-        401,
-        'Not Authorized,  You can only update your own account!'
-      )
-    );
+    return next(errorHandler(401, 'Not Authorized!'));
 
   try {
     const updateFields = {};
@@ -35,34 +30,8 @@ export const updateUser = async (req, res, next) => {
 
     const { password, ...rest } = updatedUser._doc;
 
-    res.status(200).json(rest);
+    res.status(200).json({ ...rest, message: 'User is updated successfully!' });
   } catch (error) {
     next(error);
   }
-
-  // try {
-  //   if (req?.body?.password) {
-  //     req.body.password = bcryptjs.hashSync(req?.body?.password, 10);
-  //   }
-
-  //   const updatedUser = await User.findByIdAndUpdate(
-  //     req.params.id,
-  //     {
-  //       $set: {
-  //         // ...req.body,
-  //         username: req.body.username,
-  //         email: req.body.email,
-  //         password: req.body.password,
-  //         avatar: req.body.avatar,
-  //       },
-  //     },
-  //     { new: true }
-  //   );
-
-  //   const { password, ...rest } = updatedUser._doc;
-
-  //   res.status(200).json(rest);
-  // } catch (error) {
-  //   next(error);
-  // }
 };

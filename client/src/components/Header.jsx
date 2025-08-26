@@ -41,16 +41,21 @@ export default function Header() {
           <Link to={'/profile'}>
             {currentUser ? (
               <img
-                className='rounded-full h-7 w-7 object-cover'
                 src={
-                  currentUser.avatar
+                  currentUser?.avatar
                     ? currentUser.avatar.startsWith('http')
                       ? currentUser.avatar
                       : `http://localhost:1024/${currentUser.avatar}`
                     : '/default-avatar.png'
                 }
-                // src={`http://localhost:1024/${currentUser.avatar}`}
+                className='rounded-full h-7 w-7 object-cover'
                 alt='profile'
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/default-avatar.png';
+                }}
+
+                // src={`http://localhost:1024/${currentUser.avatar}`}
               />
             ) : (
               <li className='text-slate-100 hover:underline cursor-pointer'>

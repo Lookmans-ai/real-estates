@@ -1,18 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRef } from 'react';
-import { updateUser } from '../redux/user/userSlice';
-// import MessageBox from '../components/MessageBox';
-// import { getStorage, ref, uploadBytesResumable } from 'firebase/storage';
-// import { app } from '../firebase';
+import {
+  updateUser,
+  updateUserFailure,
+  updateUserStart,
+  updateUserSuccess,
+} from '../redux/user/userSlice';
 
 export default function Profile() {
-  const fileRef = useRef(null);
   const { currentUser } = useSelector((state) => state.user);
+
+  const fileRef = useRef(null);
   const [file, setFile] = useState(undefined);
   const [message, setMessage] = useState('');
   const [progress, setProgress] = useState(0);
   const [isError, setIsError] = useState(false);
+
   // formData
   const [formData, setFormData] = useState({
     username: currentUser?.username || '',
@@ -60,6 +64,12 @@ export default function Profile() {
           if (data.filename) {
             dispatch(updateUser({ avatar: `uploads/${data.filename}` }));
           }
+
+          if (data.filename) {
+            const avatarPath = `uploads/${data.filename}`;
+            dispatch(updateUser({ avatar: avatarPath }));
+            setFormData((prev) => ({ ...prev, avatar: avatarPath }));
+          }
         } else {
           setMessage('Error uploading file');
           setIsError(true);
@@ -92,33 +102,42 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    setIsError(false);
 
     try {
-      const res = await fetch('/api/user/update', {
+      dispatch(updateUserStart());
+
+      const submitData = { ...formData };
+      if (!submitData.password) {
+        delete submitData.password;
+      }
+
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
+      console.log(data);
+
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
         setMessage(data.message || 'Update failed');
-      } else {
-        setMessage(data.message || 'Profile updated!');
-        // optionally update Redux/global state here
-        dispatch(
-          updateUser({
-            username: formData.username,
-            email: formData.email,
-            ...(data?.avatar && { avatar: data?.avatar }),
-          })
-        );
+        setIsError(true);
+        return;
       }
+
+      dispatch(updateUserSuccess(data));
+      setMessage(data.message || 'Profile updated!');
+      setIsError(false);
     } catch (error) {
-      setMessage('Error updating profile', error);
+      dispatch(updateUserFailure(error.message));
+      setMessage('Error updating profile');
+      setIsError(true);
     }
   };
 
@@ -136,7 +155,7 @@ export default function Profile() {
         <img
           onClick={() => fileRef.current.click()}
           src={
-            currentUser.avatar
+            currentUser?.avatar
               ? currentUser.avatar.startsWith('http')
                 ? currentUser.avatar
                 : `http://localhost:1024/${currentUser.avatar}`
@@ -144,30 +163,32 @@ export default function Profile() {
           }
           alt='profile'
           className='rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2'
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/default-avatar.png';
+          }}
         />
 
-        <p className='text-sm self-center'>
-          {progress > 0 && (
-            <div className='w-full bg-gray-200 rounded-full h-2.5 mb-4'>
-              <div
-                className={
-                  isError
-                    ? 'bg-red-500 h-2.5 rounded-full'
-                    : 'bg-amber-500 h-2.5 rounded-full'
-                }
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          )}
+        {progress > 0 && (
+          <div className='w-full bg-gray-200 rounded-full h-2.5 mb-4'>
+            <div
+              className={
+                isError
+                  ? 'bg-red-500 h-2.5 rounded-full'
+                  : 'bg-amber-500 h-2.5 rounded-full'
+              }
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        )}
 
-          {isError ? (
-            <p className='text-red-500'>
-              {message || 'File type not supported or upload failed.'}
-            </p>
-          ) : (
-            <p className='text-emerald-500'>{message}</p>
-          )}
-        </p>
+        {isError ? (
+          <p className='text-red-500'>
+            {message ? message : 'File type not supported or upload failed.'}
+          </p>
+        ) : (
+          <p className='text-emerald-500'>{message}</p>
+        )}
 
         <input
           type='text'
@@ -175,7 +196,7 @@ export default function Profile() {
           className='border p-3 rounded-lg'
           id='username'
           autoComplete='on'
-          value={formData.username}
+          value={formData.username || ''}
           onChange={handleChange}
         />
         <input
@@ -184,7 +205,7 @@ export default function Profile() {
           className='border p-3 rounded-lg'
           id='email'
           autoComplete='on'
-          value={formData.email}
+          value={formData.email || ''}
           onChange={handleChange}
         />
         <input
@@ -193,7 +214,7 @@ export default function Profile() {
           className='border p-3 rounded-lg'
           id='password'
           autoComplete='on'
-          value={formData}
+          value={formData.password || ''}
           onChange={handleChange}
         />
         <button className='bg-amber-500 text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'>
