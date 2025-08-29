@@ -5,6 +5,7 @@ import {
   deleteUserFailure,
   deleteUserStart,
   deleteUserSuccess,
+  signOutUserStart,
   updateUser,
   updateUserFailure,
   updateUserStart,
@@ -165,6 +166,27 @@ export default function Profile() {
     }
   };
 
+  // handle sign Out
+
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart());
+
+      const res = await fetch('/api/auth/signout');
+
+      const data = await res.json();
+
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+
+      dispatch(deleteUserSuccess(data));
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
+    }
+  };
+
   return (
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-3'>User Profile</h1>
@@ -241,7 +263,10 @@ export default function Profile() {
           value={formData.password || ''}
           onChange={handleChange}
         />
-        <button className='bg-amber-500 text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'>
+        <button
+          // disabled={loading}
+          className='bg-amber-500 text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'
+        >
           Update
         </button>
       </form>
@@ -252,7 +277,10 @@ export default function Profile() {
         >
           Delete account
         </span>
-        <span className='text-red-700 cursor-pointer hover:underline'>
+        <span
+          onClick={handleSignOut}
+          className='text-red-700 cursor-pointer hover:underline'
+        >
           Sign out
         </span>
       </div>

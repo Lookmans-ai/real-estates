@@ -6,6 +6,8 @@ export const test = (req, res) => {
   res.status(200).json({ message: 'Api route is working!' });
 };
 
+// Update controller
+
 export const updateUser = async (req, res, next) => {
   // console.log('BODY:', req.body);
   // console.log('HEARDERS:', req.headers);
@@ -35,6 +37,8 @@ export const updateUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// Delete contoller
 
 export const deleteUser = async (req, res, next) => {
   if (req.user.id !== req.params.id) {
