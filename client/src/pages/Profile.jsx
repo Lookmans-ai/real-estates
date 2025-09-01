@@ -11,6 +11,7 @@ import {
   updateUserStart,
   updateUserSuccess,
 } from '../redux/user/userSlice';
+import { Link } from 'react-router-dom';
 
 export default function Profile() {
   const { currentUser } = useSelector((state) => state.user);
@@ -265,10 +266,16 @@ export default function Profile() {
         />
         <button
           // disabled={loading}
-          className='bg-amber-500 text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'
+          className='bg-amber-500 font-semibold text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'
         >
           Update
         </button>
+        <Link
+          to={'/create-listing'}
+          className='bg-emerald-700 font-semibold p-3 text-white rounded-lg uppercase text-center hover:opacity-95'
+        >
+          Create Listing
+        </Link>
       </form>
       <div className='flex justify-between mt-5'>
         <span

@@ -64,8 +64,24 @@ app.post('/api/auth/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads', express.static('uploads'));
+app.post('/api/listings/upload', upload.array('images', 6), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'No files uploaded' });
+  }
+
+  const fileInfos = req.files.map((file) => ({
+    filename: file.filename,
+    path: file.path,
+  }));
+
+  res.status(200).json({
+    message: 'uploaded successfully!',
+    files: fileInfos,
+  });
+});
+
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// app.use('/uploads', express.static('uploads'));
 
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
