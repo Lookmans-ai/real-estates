@@ -3,6 +3,7 @@ import {
   deleteUser,
   test,
   updateUser,
+  getUserListings,
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -11,5 +12,6 @@ const userRouter = express.Router();
 userRouter.get('/test', test);
 userRouter.put('/update/:id', verifyToken, updateUser);
 userRouter.delete('/delete/:id', verifyToken, deleteUser);
+userRouter.delete('/listing/:id', verifyToken, getUserListings);
 
 export default userRouter;
