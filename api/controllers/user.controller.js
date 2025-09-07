@@ -57,6 +57,8 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
+// Listing controller
+
 export const getUserListings = async (req, res, next) => {
   if (req.user.id === req.params.id) {
     try {
@@ -66,6 +68,6 @@ export const getUserListings = async (req, res, next) => {
       next(error);
     }
   } else {
-    next(errorHandler(401, 'You can only view your own listing!'));
+    return next(errorHandler(401, 'You can only view your own listing!'));
   }
 };
