@@ -379,7 +379,8 @@ export default function CreateListing() {
           )}
           <button
             disabled={loading || uploading}
-            className='p-3 bg-transparent font-semibold hover:bg-emerald-700 text-gray-700 hover:text-white border border-emerald-300 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
+            // className='p-3 bg-transparent font-semibold hover:bg-stone-950 text-gray-700 hover:text-white border border-gray-200 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
+            className='p-3 bg-stone-950 font-semibold hover:bg-stone-900 text-white border border-gray-200 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
           >
             {loading ? 'Creating...' : 'Create Listing'}
           </button>
