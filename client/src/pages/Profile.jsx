@@ -322,7 +322,7 @@ export default function Profile() {
 
       {userListings && userListings.length > 0 && (
         <div className='flex flex-col gap-4'>
-          <h1 className='text-center mt-7 text-2xl font-semibold'>
+          <h1 className='text-center mt-7 text-2xl font-semibold text-gray-600'>
             Your Listings
           </h1>
           {userListings.map((listing) => {
@@ -335,7 +335,7 @@ export default function Profile() {
                   <img
                     src={listing.imageUrls[0]}
                     alt='listing cover'
-                    className='h-16 w-16'
+                    className='h-16 w-16 object-contain'
                   />
                 </Link>
                 <Link
