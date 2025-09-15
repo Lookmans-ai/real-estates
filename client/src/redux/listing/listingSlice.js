@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
   listings: [],
+  currentListing: null,
   loading: false,
   error: null,
 };
@@ -42,6 +43,44 @@ export const deleteListing = createAsyncThunk(
   }
 );
 
+export const fetchListing = createAsyncThunk(
+  'listings/fetchOne',
+  async (listingId, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/listing/get/${listingId}`);
+      const data = await res.json();
+      if (data.success === false) {
+        return rejectWithValue(data.message);
+      }
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateListing = createAsyncThunk(
+  'listings/update',
+  async ({ listingId, formData }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/listing/update/${listingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        return rejectWithValue(data.message);
+      }
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const listingSlice = createSlice({
   name: 'listings',
   initialState,
@@ -70,6 +109,29 @@ const listingSlice = createSlice({
         state.listings = state.listings.filter(
           (listing) => listing._id !== action.payload
         );
+      })
+      // Fetch Single Listing
+      .addCase(fetchListing.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchListing.fulfilled, (state, action) => {
+        state.currentListing = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchListing.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Update Listing
+      .addCase(updateListing.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateListing.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentListing = action.payload.listing;
+        state.error = null;
       });
   },
 });
