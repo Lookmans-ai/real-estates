@@ -1,36 +1,50 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRef } from 'react';
+
 import {
-  deleteUserFailure,
-  deleteUserStart,
-  deleteUserSuccess,
-  signOutUserStart,
+  deleteUser,
+  signOutUser,
+  updateUserAvatar,
   updateUser,
-  updateUserFailure,
-  updateUserStart,
-  updateUserSuccess,
+  clearError,
 } from '../redux/user/userSlice';
+import {
+  fetchUserListings,
+  deleteListing,
+  clearListings,
+} from '../redux/listing/listingSlice';
 import { Link } from 'react-router-dom';
 
 export default function Profile() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser, loading, error } = useSelector((state) => state.user);
+  const {
+    listings,
+    loading: listingsLoading,
+    error: listingsError,
+  } = useSelector((state) => state.listings);
 
   const fileRef = useRef(null);
   const [file, setFile] = useState(undefined);
   const [message, setMessage] = useState('');
   const [progress, setProgress] = useState(0);
   const [isError, setIsError] = useState(false);
-  const [userListings, setUserListings] = useState([]);
+  // const [userListings, setUserListings] = useState([]);
 
   // formData
-  const [formData, setFormData] = useState({
-    username: currentUser?.username || '',
-    email: currentUser?.email || '',
-    password: '',
-    avatar: currentUser.avatar,
-  });
-  console.log(file);
+  const [formData, setFormData] = useState({});
+
+  // This effect syncs the local form state with the Redux state.
+  // This is crucial to prevent stale data in the form after a successful update or page rehydration.
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        username: currentUser.username,
+        email: currentUser.email,
+        password: '', // Always clear password for security
+        avatar: currentUser.avatar,
+      });
+    }
+  }, [currentUser]);
 
   // handle input change for text fields
   const handleChange = (e) => {
@@ -66,15 +80,9 @@ export default function Profile() {
           setMessage(data.message || 'Upload successful!');
           setIsError(false);
 
-          // updating avatar in Redux
-          if (data.filename) {
-            dispatch(updateUser({ avatar: `uploads/${data.filename}` }));
-          }
-
           if (data.filename) {
             const avatarPath = `uploads/${data.filename}`;
-            dispatch(updateUser({ avatar: avatarPath }));
-            setFormData((prev) => ({ ...prev, avatar: avatarPath }));
+            dispatch(updateUserAvatar(avatarPath));
           }
         } else {
           setMessage('Error uploading file');
@@ -90,8 +98,6 @@ export default function Profile() {
       };
 
       xhr.send(formData);
-
-      console.log(formData);
     },
     [dispatch]
   );
@@ -102,69 +108,40 @@ export default function Profile() {
     }
   }, [file, handleFileUpload]);
 
-  console.log(formData);
-
   // handle form submission for profile update
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Clear previous messages before a new submission
     setMessage('');
-    setIsError(false);
+    dispatch(clearError()); // Clear any lingering redux errors
 
     try {
-      dispatch(updateUserStart());
-
       const submitData = { ...formData };
-      if (!submitData.password) {
+      // Ensure we don't send an empty password string to be hashed
+      if (!submitData.password || submitData.password.trim() === '') {
         delete submitData.password;
       }
 
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(submitData),
-      });
+      // Dispatch the async thunk and use .unwrap() to handle promise resolution
+      const actionResult = await dispatch(
+        updateUser({ userId: currentUser._id, formData: submitData })
+      ).unwrap();
 
-      const data = await res.json();
-
-      console.log(data);
-
-      if (data.success === false) {
-        dispatch(updateUserFailure(data.message));
-        setMessage(data.message || 'Update failed');
-        setIsError(true);
-        return;
-      }
-
-      dispatch(updateUserSuccess(data));
-      setMessage(data.message || 'Profile updated!');
-      setIsError(false);
-    } catch (error) {
-      dispatch(updateUserFailure(error.message));
-      setMessage('Error updating profile');
-      setIsError(true);
+      // If successful, set a transient success message
+      setMessage(actionResult.message || 'Profile updated successfully!');
+    } catch (rejectedValue) {
+      // .unwrap() will throw the rejected value, which is the error message from the slice.
+      // The error is already in the Redux state, so we just log it for debugging.
+      console.error('Failed to update profile:', rejectedValue);
     }
   };
 
   const handleDeleteUser = async () => {
     try {
-      dispatch(deleteUserStart());
-
-      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await res.json();
-
-      if (data.success === false) {
-        dispatch(deleteUserFailure(data.message));
-        return;
-      }
-
-      dispatch(deleteUserSuccess(data));
-    } catch (error) {
-      dispatch(deleteUserFailure(error.message));
+      dispatch(clearError());
+      await dispatch(deleteUser(currentUser._id)).unwrap();
+    } catch (rejectedValue) {
+      console.error('Failed to delete user:', rejectedValue);
     }
   };
 
@@ -172,67 +149,49 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     try {
-      dispatch(signOutUserStart());
-
-      const res = await fetch('/api/auth/signout');
-
-      const data = await res.json();
-
-      if (data.success === false) {
-        dispatch(deleteUserFailure(data.message));
-        return;
-      }
-
-      dispatch(deleteUserSuccess(data));
-    } catch (error) {
-      dispatch(deleteUserFailure(error.message));
+      dispatch(clearError());
+      dispatch(clearListings());
+      await dispatch(signOutUser()).unwrap();
+    } catch (rejectedValue) {
+      console.error('Failed to sign out:', rejectedValue);
     }
   };
 
   // Show Listing func
 
   const handleShowListings = async () => {
-    try {
-      setIsError(false);
-      const res = await fetch(`/api/user/listings/${currentUser._id}`);
-      const data = await res.json();
-
-      if (data.success === false) {
-        setIsError(data.message);
-        return;
-      }
-
-      setUserListings(data);
-    } catch (error) {
-      setIsError(error.message);
-    }
+    dispatch(fetchUserListings(currentUser._id));
   };
 
   // Delete listing func
 
   const handleListingDelete = async (listingId) => {
     try {
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-
-      if (data.success === false) {
-        setIsError(data.message);
-        return;
-      }
-
-      setUserListings((prev) =>
-        prev.filter((listing) => listing._id !== listingId)
-      );
-    } catch (error) {
-      setIsError(error.message);
+      await dispatch(deleteListing(listingId)).unwrap();
+    } catch (rejectedValue) {
+      console.error('Failed to delete listing:', rejectedValue);
     }
   };
 
   return (
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-3'>User Profile</h1>
+
+      {/* --- Unified and Improved Message Display --- */}
+      {/* Shows Redux error first, then local component messages */}
+      {error || listingsError ? (
+        <p className='bg-red-200 text-red-700 p-3 my-2 rounded-lg text-center'>
+          {error || listingsError}
+        </p>
+      ) : message ? (
+        <p
+          className={`${
+            isError ? 'bg-red-200 text-red-700' : 'bg-green-200 text-green-700'
+          } p-3 my-2 rounded-lg text-center`}
+        >
+          {message}
+        </p>
+      ) : null}
       <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
         <input
           onChange={(e) => setFile(e.target.files[0])}
@@ -246,8 +205,8 @@ export default function Profile() {
           src={
             currentUser?.avatar
               ? currentUser.avatar.startsWith('http')
-                ? currentUser.avatar
-                : `http://localhost:1024/${currentUser.avatar}`
+                ? currentUser.avatar // Google photo URL
+                : `/${currentUser.avatar}` // Local upload, now proxied
               : '/default-avatar.png'
           }
           alt='profile'
@@ -269,14 +228,6 @@ export default function Profile() {
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-        )}
-
-        {isError ? (
-          <p className='text-red-500'>
-            {message ? message : 'File type not supported or upload failed.'}
-          </p>
-        ) : (
-          <p className='text-emerald-500'>{message}</p>
         )}
 
         <input
@@ -307,10 +258,10 @@ export default function Profile() {
           onChange={handleChange}
         />
         <button
-          // disabled={loading}
+          disabled={loading}
           className='bg-amber-500 font-semibold text-white p-3 hover:opacity-95 disabled:opacity-80 uppercase rounded-lg'
         >
-          Update
+          {loading ? 'Loading...' : 'Update'}
         </button>
         <Link
           to={'/create-listing'}
@@ -340,14 +291,15 @@ export default function Profile() {
         {' '}
         Show Listings
       </button>
-      {isError ? <p className='text-red-500'>{message}</p> : ''}
-
-      {userListings && userListings.length > 0 && (
+      {listingsLoading && (
+        <p className='text-center my-7'>Loading listings...</p>
+      )}
+      {listings && listings.length > 0 && (
         <div className='flex flex-col gap-4'>
           <h1 className='text-center mt-7 text-2xl font-semibold text-gray-600'>
             Your Listings
           </h1>
-          {userListings.map((listing) => {
+          {listings.map((listing) => {
             return (
               <div
                 key={listing._id}
@@ -355,7 +307,7 @@ export default function Profile() {
               >
                 <Link to={`/listing/${listing._id}`}>
                   <img
-                    src={listing.imageUrls[0]}
+                    src={'/' + listing.imageUrls[0].replace(/\\/g, '/')}
                     alt='listing cover'
                     className='h-16 w-16 object-contain'
                   />

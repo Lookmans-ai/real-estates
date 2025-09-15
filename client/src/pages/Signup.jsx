@@ -5,12 +5,9 @@ import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  signInStart,
-  signInSuccess,
-  signInFailure,
-} from '../redux/user/userSlice';
+
 import OAuth from '../components/OAuth';
+import { signUp } from '../redux/user/userSlice';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -33,44 +30,19 @@ export default function Signup() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    dispatch(signInStart());
-    // setLoading(true);
-    // setError(null);
     setSuccessMsg(null);
+
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      console.log(data);
-      if (data?.success === false) {
-        dispatch(signInFailure(data.message));
-        // setLoading(false);
-        // setError(data.message);
-        return;
-      }
-
-      dispatch(signInSuccess(data));
-
-      // setLoading(false);
-      // setError(null);
-      setSuccessMsg(data.message); //show server message
+      const actionResult = await dispatch(signUp(formData)).unwrap();
+      setSuccessMsg(actionResult.message || 'Sign up successful!');
 
       setTimeout(() => {
         navigate('/sign-in');
       }, 2000);
-
-      // navigate('/sign-in');
-    } catch (error) {
-      console.log(error);
-      dispatch(signInFailure(error.message));
-      // setLoading(false);
-      // setError(error.message);
+    } catch (rejectedValue) {
+      // The error state is already handled by the rejected reducer
+      // We just need to log it if we want to.
+      console.error('Failed to sign up:', rejectedValue);
     }
   };
   // console.log(formData);
@@ -115,7 +87,7 @@ export default function Signup() {
           disabled={loading}
           className='bg-amber-500 hover:opacity-95 disabled:opacity-80 text-white p-3 rounded-lg uppercase'
         >
-          {loading ? <LoadingBox /> : 'Sign Up'}
+          {loading ? 'Loading...' : 'Sign Up'}
         </button>
         <OAuth />
       </form>

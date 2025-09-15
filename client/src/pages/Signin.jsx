@@ -5,11 +5,7 @@ import LoadingBox from '../components/LoadingBox';
 import { useNavigate } from 'react-router-dom';
 import MessageBox from '../components/MessageBox';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  signInStart,
-  signInSuccess,
-  signInFailure,
-} from '../redux/user/userSlice';
+import { signIn } from '../redux/user/userSlice';
 import OAuth from '../components/OAuth';
 
 export default function Signin() {
@@ -33,43 +29,21 @@ export default function Signin() {
   const submitHandler = async (e) => {
     e.preventDefault();
     // setLoading(true);
-    dispatch(signInStart());
+    // dispatch(signInStart());
     // setError(null);
     setSuccessMsg(null);
     try {
-      const res = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      console.log(data);
-      if (data?.success === false) {
-        // setLoading(false);
-        // setError(data.message);
-        dispatch(signInFailure(data.message));
-        return;
-      }
-
-      dispatch(signInSuccess(data));
-
-      // setLoading(false);
-      // setError(null);
-      setSuccessMsg(data.message); //show server message
+      const actionResult = await dispatch(signIn(formData)).unwrap();
+      // setSuccessMsg(actionResult.message || 'Sign up successful!');
+      setSuccessMsg(actionResult.message || 'Sign in successful!');
 
       setTimeout(() => {
         navigate('/');
       }, 2000);
-
-      // navigate('/');
-    } catch (error) {
-      console.log(error);
-      // setLoading(false);
-      // setError(error.message);
-      dispatch(signInFailure(error.message));
+    } catch (rejectedValue) {
+      // The error state is already handled by the rejected reducer
+      // We just need to log it if we want to.
+      console.error('Failed to sign in:', rejectedValue);
     }
   };
   // console.log(formData);
@@ -104,9 +78,9 @@ export default function Signin() {
         />
         <button
           disabled={loading}
-          className='bg-amber-500 hover:opacity-95 disabled:opacity-80 text-white p-3 rounded-lg uppercase'
+          className='bg-amber-500 hover:opacity-95 disabled:opacity-80 text-white p-3 rounded-lg uppercase cursor-pointer'
         >
-          {loading ? <LoadingBox /> : 'Sign In'}
+          {loading ? 'Loading...' : 'Sign In'}
         </button>
         <OAuth />
       </form>

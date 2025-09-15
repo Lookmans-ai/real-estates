@@ -32,7 +32,9 @@ export const signup = async (req, res, next) => {
 
     await newUser.save();
 
-    return res.status(201).json({ message: 'User created successfully!' });
+    return res
+      .status(201)
+      .json({ success: true, message: 'User created successfully!' });
   } catch (error) {
     if (error.code === 11000) {
       next(errorHandler(400, 'Wrong credentials!'));
@@ -61,10 +63,11 @@ export const signin = async (req, res, next) => {
 
     const { password: pass, ...rest } = validUser._doc;
 
-    res
-      .cookie('access_token', token, { httpOnly: true })
-      .status(200)
-      .json({ ...rest, message: 'Sign in successful!' });
+    res.cookie('access_token', token, { httpOnly: true }).status(200).json({
+      success: true,
+      message: 'Sign in successful!',
+      user: rest,
+    });
   } catch (error) {
     if (error.code === 11000) {
       next(errorHandler(400, 'Wrong credentials!'));
@@ -81,10 +84,11 @@ export const google = async (req, res, next) => {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
       const { password: pass, ...rest } = user._doc;
 
-      res
-        .cookie('access_token', token, { httpOnly: true })
-        .status(200)
-        .json(rest);
+      res.cookie('access_token', token, { httpOnly: true }).status(200).json({
+        success: true,
+        message: 'Sign in successful!',
+        user: rest,
+      });
     } else {
       const generatedPassword =
         Math.random().toString(36).slice(-8) +
@@ -102,14 +106,15 @@ export const google = async (req, res, next) => {
 
       await newUser.save();
 
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+      const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
 
-      const { password: pass, ...rest } = user._doc;
+      const { password: pass, ...rest } = newUser._doc;
 
-      res
-        .cookie('access_token', token, { httpOnly: true })
-        .status(200)
-        .json(rest);
+      res.cookie('access_token', token, { httpOnly: true }).status(200).json({
+        success: true,
+        message: 'Sign in successful!',
+        user: rest,
+      });
     }
   } catch (error) {
     next(error);
@@ -121,7 +126,9 @@ export const google = async (req, res, next) => {
 export const signOut = async (req, res, next) => {
   try {
     res.clearCookie('access_token');
-    res.status(200).json({ message: 'User has been logged out!' });
+    res
+      .status(200)
+      .json({ success: true, message: 'User has been logged out!' });
   } catch (error) {
     next(error);
   }

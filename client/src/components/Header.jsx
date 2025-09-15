@@ -44,8 +44,8 @@ export default function Header() {
                 src={
                   currentUser?.avatar
                     ? currentUser.avatar.startsWith('http')
-                      ? currentUser.avatar
-                      : `http://localhost:1024/${currentUser.avatar}`
+                      ? currentUser.avatar // Google photo URL
+                      : `/${currentUser.avatar}` // Local upload, now proxied
                     : '/default-avatar.png'
                 }
                 className='rounded-full h-7 w-7 object-cover'

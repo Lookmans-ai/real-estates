@@ -2,8 +2,10 @@ import React from 'react';
 import { app } from '../firebase';
 import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
-import { signInSuccess } from '../redux/user/userSlice';
+// import { signInSuccess } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
+import { googleSignIn } from '../redux/user/userSlice';
+// import { googleSignIn } from '../redux/user/userSlice';
 
 export default function OAuth() {
   const dispatch = useDispatch();
@@ -19,23 +21,31 @@ export default function OAuth() {
 
       console.log(result);
 
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: result.user.displayName,
-          email: result.user.email,
-          photo: result.user.photoURL,
-        }),
-      });
+      // const res = await fetch('/api/auth/google', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     name: result.user.displayName,
+      //     email: result.user.email,
+      //     photo: result.user.photoURL,
+      //   }),
+      // });
 
-      const data = await res.json();
+      // const data = await res.json();
 
-      console.log(data);
+      // console.log(data);
 
-      dispatch(signInSuccess(data));
+      // dispatch(signInSuccess(data));
+
+      const userData = {
+        name: result.user.displayName,
+        email: result.user.email,
+        photo: result.user.photoURL,
+      };
+
+      await dispatch(googleSignIn(userData)).unwrap();
 
       navigate('/');
     } catch (error) {
