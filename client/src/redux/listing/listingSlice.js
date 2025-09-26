@@ -88,6 +88,9 @@ const listingSlice = createSlice({
     clearListings: (state) => {
       state.listings = [];
     },
+    clearCurrentListing: (state) => {
+      state.currentListing = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -136,6 +139,6 @@ const listingSlice = createSlice({
   },
 });
 
-export const { clearListings } = listingSlice.actions;
+export const { clearListings, clearCurrentListing } = listingSlice.actions;
 
 export default listingSlice.reducer;
